@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mappa dei Ricordi</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c2185b">
+    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Scatola dei Ricordi">
+
+</head>
+
+<body>
+    <header>
+        <h1><i class="heart-icon fas fa-heart"></i> Mappa dei Ricordi <i class="heart-icon fas fa-heart"></i></h1>
+        <p class="subtitle">Mappa dei nostri momenti speciali</p>
+    </header>
+
+    <div class="app-container">
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="map-section">
+                <i class="fas fa-map-marked-alt"></i> Mappa
+            </button>
+            <button class="tab-button" data-tab="memory-list-section">
+                <i class="fas fa-list"></i> I Tuoi Ricordi
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div id="map-section" class="tab-content active">
+                <div id="map"></div>
+                <div class="sidebar">
+                    <h2><i class="fas fa-plus-circle"></i> Aggiungi un Ricordo</h2>
+                    <form id="memory-form">
+                        <div class="form-group">
+                            <label for="memory-title"><i class="fas fa-heading"></i> Titolo</label>
+                            <input type="text" id="memory-title" required placeholder="Es. Il nostro primo incontro">
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-desc"><i class="fas fa-comment"></i> Descrizione</label>
+                            <textarea id="memory-desc" required
+                                placeholder="Racconta questo momento speciale..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-date"><i class="fas fa-calendar-day"></i> Data del ricordo</label>
+                            <input type="date" id="memory-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-location"><i class="fas fa-map-marker-alt"></i> Posizione (clicca sulla
+                                mappa)</label>
+                            <input type="text" id="memory-location" readonly
+                                placeholder="Clicca sulla mappa per selezionare">
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-photo"><i class="fas fa-camera"></i> Aggiungi una foto</label>
+                            <input type="file" id="memory-photo" accept="image/*">
+                        </div>
+                        <div class="button-group">
+                            <button type="submit"><i class="fas fa-save"></i> Salva Ricordo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="memory-list-section" class="tab-content">
+                <h2 class="section-title"><i class="fas fa-memory"></i> I Tuoi Ricordi</h2>
+                <div class="memories-grid" id="memories-container">
+                    <!-- I ricordi verranno inseriti qui dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Inizializzazione della mappa
+        const map = L.map('map').setView([41.9028, 12.4964], 5);
+
+        // Aggiungere il layer della mappa (con uno stile più romantico)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Riferimenti agli elementi del DOM
+        const memoryForm = document.getElementById('memory-form');
+        const memoryTitle = document.getElementById('memory-title');
+        const memoryDesc = document.getElementById('memory-desc');
+        const memoryLocation = document.getElementById('memory-location');
+        const memoryPhoto = document.getElementById('memory-photo');
+        const memoriesContainer = document.getElementById('memories-container');
+        const tabButtons = document.querySelectorAll('.tab-button');
+
+        // Memorizza i marker e i ricordi
+        let memories = JSON.parse(localStorage.getItem('memories')) || [];
+        let markers = [];
+        let selectedLocation = null;
+        let selectionMarker = null;
+
+        // Gestione dei tab
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+
+                // Disattiva tutti i tab
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+
+                // Attiva il tab cliccato
+                button.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+
+                // Se stiamo aprendo la lista ricordi, aggiornala
+                if (tabId === 'memory-list-section') {
+                    renderMemoryList();
+                }
+            });
+        });
+
+        // Gestore di click sulla mappa per selezionare una posizione
+        map.on('click', (e) => {
+            selectedLocation = e.latlng;
+            memoryLocation.value = `Lat: ${selectedLocation.lat.toFixed(4)}, Lng: ${selectedLocation.lng.toFixed(4)}`;
+
+            // Rimuovi il marker precedente se esiste
+            if (selectionMarker) {
+                map.removeLayer(selectionMarker);
+            }
+
+            // Aggiungi un marker temporaneo per la selezione
+            selectionMarker = L.marker(selectedLocation, {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '<i class="fas fa-heart"></i>',
+                    iconSize: [24, 24]
+                })
+            }).addTo(map);
+        });
+
+        // Gestore di invio del form
+        memoryForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            if (!selectedLocation) {
+                alert('Per favore, seleziona una posizione sulla mappa.');
+                return;
+            }
+
+            // Leggi il file dell'immagine se presente
+            const photoFile = memoryPhoto.files[0];
+            let photoData = null;
+
+            if (photoFile) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    photoData = e.target.result;
+                    saveMemory(photoData);
+                };
+                reader.readAsDataURL(photoFile);
+            } else {
+                saveMemory(photoData);
+            }
+        });
+
+        // Salva il ricordo
+        function saveMemory(photoData) {
+            const memoryDate = document.getElementById('memory-date').value;
+            const formattedDate = memoryDate ? new Date(memoryDate).toISOString() : new Date().toISOString();
+
+            const newMemory = {
+                id: Date.now(),
+                title: memoryTitle.value,
+                description: memoryDesc.value,
+                location: selectedLocation,
+                photo: photoData,
+                date: formattedDate
+            };
+
+            memories.push(newMemory);
+            localStorage.setItem('memories', JSON.stringify(memories));
+
+            addMemoryToMap(newMemory);
+
+            // Reset del form
+            memoryForm.reset();
+            selectedLocation = null;
+            memoryLocation.value = '';
+            if (selectionMarker) {
+                map.removeLayer(selectionMarker);
+                selectionMarker = null;
+            }
+
+            // Mostra un feedback visivo
+            const submitBtn = memoryForm.querySelector('button');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-check"></i> Ricordo Salvato!';
+            submitBtn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)';
+
+            setTimeout(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.style.background = 'linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%)';
+            }, 2000);
+        }
+
+        // Aggiungi un ricordo alla mappa
+        function addMemoryToMap(memory) {
+            const marker = L.marker(memory.location, {
+                icon: L.divIcon({
+                    className: '',
+                    html: '<i class="fas fa-heart" style="color: #c2185b; font-size: 24px; text-shadow: 0 0 8px white;"></i>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30]
+                })
+            }).addTo(map);
+
+            let popupContent = `<h3>${memory.title}</h3><p>${memory.description}</p>`;
+            if (memory.photo) {
+                popupContent += `<img src="${memory.photo}" alt="${memory.title}">`;
+            }
+            popupContent += `<p><small><i class="fas fa-calendar"></i> ${formatDate(memory.date)}</small></p>`;
+
+            marker.bindPopup(popupContent);
+
+            // Aggiungi effetto al click
+            marker.on('click', function () {
+                this.openPopup();
+            });
+
+            markers.push({ id: memory.id, marker: marker });
+        }
+
+        // Formatta la data
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            return date.toLocaleDateString('it-IT', options);
+        }
+
+        // Visualizza l'elenco dei ricordi
+        function renderMemoryList() {
+            memoriesContainer.innerHTML = '';
+
+            if (memories.length === 0) {
+                memoriesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-heart"></i>
+                        <p>Non hai ancora aggiunto ricordi.</p>
+                        <p>Vai alla sezione Mappa per iniziare!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            memories.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(memory => {
+                const memoryElement = document.createElement('div');
+                memoryElement.className = 'memory-card';
+
+                // Contenuto dell'immagine
+                let imageContent = '';
+                if (memory.photo) {
+                    imageContent = `<img src="${memory.photo}" alt="${memory.title}">`;
+                } else {
+                    imageContent = `<div class="placeholder"><i class="fas fa-heart"></i></div>`;
+                }
+
+                memoryElement.innerHTML = `
+    <div class="memory-image">
+        ${imageContent}
+    </div>
+    <div class="memory-content">
+        <div class="memory-title"><i class="fas fa-heart"></i> ${memory.title}</div>
+        <div class="memory-desc">${memory.description}</div>
+        <div class="memory-meta">
+            <div class="memory-date"><i class="fas fa-calendar"></i> ${formatDate(memory.date)}</div>
+            <div class="memory-location"><i class="fas fa-map-marker-alt"></i> Mappa</div>
+        </div>
+        <div class="memory-actions">
+            <button class="btn-small btn-view-on-map" data-id="${memory.id}">
+                <i class="fas fa-map-marked-alt"></i> Vedi sulla Mappa
+            </button>
+            <button class="btn-small btn-delete" data-id="${memory.id}">
+                <i class="fas fa-trash"></i> Elimina
+            </button>
+        </div>
+    </div>
+`;
+
+                memoriesContainer.appendChild(memoryElement);
+            });
+
+            // Aggiungi event listener per i pulsanti
+            document.querySelectorAll('.btn-view-on-map').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const memoryId = parseInt(btn.getAttribute('data-id'));
+                    viewOnMap(memoryId);
+                });
+            });
+
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const memoryId = parseInt(btn.getAttribute('data-id'));
+                    deleteMemory(memoryId);
+                });
+            });
+        }
+
+        // Visualizza un ricordo sulla mappa
+        function viewOnMap(memoryId) {
+            // Attiva la tab della mappa
+            tabButtons[0].click();
+
+            // Trova il ricordo
+            const memory = memories.find(m => m.id === memoryId);
+            if (memory) {
+                // Centra la mappa sulla posizione
+                map.setView(memory.location, 13);
+
+                // Apri il popup del marker corrispondente
+                const markerObj = markers.find(m => m.id === memoryId);
+                if (markerObj) {
+                    setTimeout(() => {
+                        markerObj.marker.openPopup();
+                    }, 500);
+                }
+            }
+        }
+
+        // Elimina un ricordo
+        function deleteMemory(memoryId) {
+            if (confirm('Sei sicuro di voler eliminare questo ricordo?')) {
+                // Rimuovi dalla memoria
+                memories = memories.filter(m => m.id !== memoryId);
+                localStorage.setItem('memories', JSON.stringify(memories));
+
+                // Rimuovi il marker dalla mappa
+                const markerIndex = markers.findIndex(m => m.id === memoryId);
+                if (markerIndex !== -1) {
+                    map.removeLayer(markers[markerIndex].marker);
+                    markers.splice(markerIndex, 1);
+                }
+
+                // Aggiorna la lista
+                renderMemoryList();
+            }
+        }
+
+        // Carica i ricordi salvati all'avvio
+        function loadMemories() {
+            memories.forEach(memory => {
+                // Converti la posizione in oggetto LatLng se è memorizzata come oggetto semplice
+                if (typeof memory.location === 'object' && memory.location.lat && memory.location.lng) {
+                    memory.location = L.latLng(memory.location.lat, memory.location.lng);
+                }
+                addMemoryToMap(memory);
+            });
+        }
+
+        // Inizializza l'app
+        loadMemories();
+
+        // Aggiungi cuori fluttuanti come effetto decorativo
+        function createFloatingHearts() {
+            const heart = document.createElement('div');
+            heart.innerHTML = '<i class="fas fa-heart" style="color: #ff80ab;"></i>';
+            heart.style.position = 'fixed';
+            heart.style.top = '0';
+            heart.style.left = Math.random() * window.innerWidth + 'px';
+            heart.style.opacity = '0';
+            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            heart.style.pointerEvents = 'none';
+            heart.style.zIndex = '9999';
+            document.body.appendChild(heart);
+
+            const animation = heart.animate([
+                { top: '0', opacity: 0 },
+                { top: '10px', opacity: 0.7 },
+                { top: window.innerHeight + 'px', opacity: 0 }
+            ], {
+                duration: Math.random() * 3000 + 4000,
+                easing: 'cubic-bezier(0.250, 0.250, 0.750, 0.750)'
+            });
+
+            animation.onfinish = () => {
+                heart.remove();
+            };
+        }
+
+        // Aggiungi cuori fluttuanti occasionalmente
+        setInterval(createFloatingHearts, 3000);
+    </script>
+    <script>
+        // Registrazione del Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function (registration) {
+                        console.log('ServiceWorker registrato con successo: ', registration.scope);
+                    })
+                    .catch(function (error) {
+                        console.log('Registrazione ServiceWorker fallita: ', error);
+                    });
+            });
+        }
+
+        // Gestione dell'installazione dell'app
+        let deferredPrompt;
+        const installButton = document.createElement('button');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Previene la visualizzazione automatica del prompt
+            e.preventDefault();
+            // Salva l'evento per poterlo mostrare dopo
+            deferredPrompt = e;
+
+            // Mostra il pulsante di installazione
+            installButton.style.position = 'fixed';
+            installButton.style.bottom = '20px';
+            installButton.style.right = '20px';
+            installButton.style.zIndex = '1000';
+            installButton.style.background = 'linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%)';
+            installButton.style.color = 'white';
+            installButton.style.border = 'none';
+            installButton.style.borderRadius = '50%';
+            installButton.style.width = '60px';
+            installButton.style.height = '60px';
+            installButton.style.fontSize = '24px';
+            installButton.style.cursor = 'pointer';
+            installButton.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.3)';
+            installButton.innerHTML = '<i class="fas fa-download"></i>';
+            installButton.title = 'Installa app';
+
+            installButton.addEventListener('click', () => {
+                // Nascondi il pulsante
+                installButton.style.display = 'none';
+                // Mostra il prompt di installazione
+                deferredPrompt.prompt();
+                // Attendi la scelta dell'utente
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Utente ha accettato l\'installazione');
+                    } else {
+                        console.log('Utente ha rifiutato l\'installazione');
+                    }
+                    deferredPrompt = null;
+                });
+            });
+
+            document.body.appendChild(installButton);
+        });
+    </script>
+
+</body>
+
+</html>
