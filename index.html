@@ -5,7 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mappa dei Ricordi</title>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="clustering.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 
@@ -79,7 +85,8 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+
     <script>
         // Inizializzazione della mappa
         const map = L.map('map').setView([41.9028, 12.4964], 5);
@@ -102,7 +109,7 @@
 
         // Memorizza i marker e i ricordi
         let memories = JSON.parse(localStorage.getItem('memories')) || [];
-        let markers = [];
+        let memoryClustering = null;
         let selectedLocation = null;
         let selectionMarker = null;
 
@@ -171,6 +178,8 @@
             }
         });
 
+        memoryClustering = new MemoryClustering(map);
+
         // Salva il ricordo
         function saveMemory(photoData) {
             const memoryDate = document.getElementById('memory-date').value;
@@ -220,7 +229,7 @@
                     iconSize: [30, 30],
                     iconAnchor: [15, 30]
                 })
-            }).addTo(map);
+            });
 
             let popupContent = `<h3>${memory.title}</h3><p>${memory.description}</p>`;
             if (memory.photo) {
@@ -235,7 +244,8 @@
                 this.openPopup();
             });
 
-            markers.push({ id: memory.id, marker: marker });
+            // Aggiungi il marker al clustering invece di aggiungerlo direttamente alla mappa
+            memoryClustering.addMarker(marker, memory.id);
         }
 
         // Formatta la data
@@ -313,7 +323,7 @@
             });
         }
 
-        // Visualizza un ricordo sulla mappa
+
         function viewOnMap(memoryId) {
             // Attiva la tab della mappa
             tabButtons[0].click();
@@ -325,12 +335,27 @@
                 map.setView(memory.location, 13);
 
                 // Apri il popup del marker corrispondente
-                const markerObj = markers.find(m => m.id === memoryId);
-                if (markerObj) {
-                    setTimeout(() => {
-                        markerObj.marker.openPopup();
-                    }, 500);
-                }
+                // Dobbiamo trovare il marker nel clustering
+                setTimeout(() => {
+                    // Forziamo il clustering a mostrare tutti i marker a questo livello di zoom
+                    memoryClustering.markerClusterGroup.zoomToShowLayer(
+                        memoryClustering.markerClusterGroup.getLayers().find(layer => {
+                            // Cerchiamo il marker con l'ID corrispondente
+                            const markerData = memoryClustering.markers.find(m => m.id === memoryId);
+                            return markerData && markerData.marker === layer;
+                        }),
+                        function () {
+                            // Callback quando il marker è visibile
+                            const marker = memoryClustering.markerClusterGroup.getLayers().find(layer => {
+                                const markerData = memoryClustering.markers.find(m => m.id === memoryId);
+                                return markerData && markerData.marker === layer;
+                            });
+                            if (marker) {
+                                marker.openPopup();
+                            }
+                        }
+                    );
+                }, 500);
             }
         }
 
@@ -341,12 +366,8 @@
                 memories = memories.filter(m => m.id !== memoryId);
                 localStorage.setItem('memories', JSON.stringify(memories));
 
-                // Rimuovi il marker dalla mappa
-                const markerIndex = markers.findIndex(m => m.id === memoryId);
-                if (markerIndex !== -1) {
-                    map.removeLayer(markers[markerIndex].marker);
-                    markers.splice(markerIndex, 1);
-                }
+                // Rimuovi il marker usando il clustering
+                memoryClustering.removeMarker(memoryId);
 
                 // Aggiorna la lista
                 renderMemoryList();

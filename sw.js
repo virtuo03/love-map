@@ -5,6 +5,10 @@ const urlsToCache = [
   'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
+  'https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js',
+  'https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css',
+  'https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css',
+  '/clustering.js',
   '/icons/icon-72x72.png',
   '/icons/icon-96x96.png',
   '/icons/icon-128x128.png',
@@ -15,25 +19,25 @@ const urlsToCache = [
   '/icons/icon-512x512.png'
 ];
 
-self.addEventListener('install', function(event) {
+self.addEventListener('install', function (event) {
   console.log('Service Worker installato');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(function(cache) {
+      .then(function (cache) {
         console.log('Cache aperta');
         return cache.addAll(urlsToCache);
       })
   );
 });
 
-self.addEventListener('fetch', function(event) {
+self.addEventListener('fetch', function (event) {
   // Gestione delle richieste di mappe
-  if (event.request.url.includes('tile.openstreetmap.org') || 
-      event.request.url.includes('basemaps.cartocdn.com')) {
+  if (event.request.url.includes('tile.openstreetmap.org') ||
+    event.request.url.includes('basemaps.cartocdn.com')) {
     event.respondWith(
-      caches.open('map-tiles').then(function(cache) {
-        return cache.match(event.request).then(function(response) {
-          return response || fetch(event.request).then(function(networkResponse) {
+      caches.open('map-tiles').then(function (cache) {
+        return cache.match(event.request).then(function (response) {
+          return response || fetch(event.request).then(function (networkResponse) {
             cache.put(event.request, networkResponse.clone());
             return networkResponse;
           });
@@ -42,23 +46,23 @@ self.addEventListener('fetch', function(event) {
     );
     return;
   }
-  
+
   // Gestione standard per altre richieste
   event.respondWith(
     caches.match(event.request)
-      .then(function(response) {
+      .then(function (response) {
         return response || fetch(event.request);
       })
   );
 });
 
-self.addEventListener('activate', function(event) {
+self.addEventListener('activate', function (event) {
   console.log('Service Worker attivato');
   // Elimina cache vecchie
   event.waitUntil(
-    caches.keys().then(function(cacheNames) {
+    caches.keys().then(function (cacheNames) {
       return Promise.all(
-        cacheNames.map(function(cacheName) {
+        cacheNames.map(function (cacheName) {
           if (cacheName !== CACHE_NAME && cacheName !== 'map-tiles') {
             console.log('Cancellazione cache vecchia:', cacheName);
             return caches.delete(cacheName);
