@@ -536,3 +536,45 @@ button:hover {
 .btn-view-on-map {
     background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
 }
+
+/* Stili per SweetAlert2 personalizzati */
+.custom-swal-popup {
+    border-radius: 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.9);
+    background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-swal-title {
+    color: #FFFFFF;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.custom-swal-html {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.15rem;
+    line-height: 1.6;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.custom-swal-confirm {
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.custom-swal-cancel {
+    border-radius: 10px;
+    padding: 12px 28px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}

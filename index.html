@@ -7,7 +7,7 @@
     <title>Mappa dei Ricordi</title>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
@@ -361,17 +361,53 @@
 
         // Elimina un ricordo
         function deleteMemory(memoryId) {
-            if (confirm('Sei sicuro di voler eliminare questo ricordo?')) {
-                // Rimuovi dalla memoria
-                memories = memories.filter(m => m.id !== memoryId);
-                localStorage.setItem('memories', JSON.stringify(memories));
+            // Trova il ricordo per mostrare il titolo nel messaggio
+            const memory = memories.find(m => m.id === memoryId);
+            const memoryTitle = memory ? memory.title : 'questo ricordo';
 
-                // Rimuovi il marker usando il clustering
-                memoryClustering.removeMarker(memoryId);
+            Swal.fire({
+                title: 'Sei sicuro?',
+                html: `Stai per eliminare <strong>"${memoryTitle}"</strong>.<br>Questa azione non può essere annullata.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c2185b',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sì, elimina!',
+                cancelButtonText: 'Annulla',
+                background: 'var(--card-bg)',
+                color: 'var(--text-color)',
+                customClass: {
+                    popup: 'custom-swal-popup',
+                    title: 'custom-swal-title',
+                    htmlContainer: 'custom-swal-html',
+                    confirmButton: 'custom-swal-confirm',
+                    cancelButton: 'custom-swal-cancel'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Rimuovi dalla memoria
+                    memories = memories.filter(m => m.id !== memoryId);
+                    localStorage.setItem('memories', JSON.stringify(memories));
 
-                // Aggiorna la lista
-                renderMemoryList();
-            }
+                    // Rimuovi il marker usando il clustering
+                    memoryClustering.removeMarker(memoryId);
+
+                    // Aggiorna la lista
+                    renderMemoryList();
+
+                    // Mostra conferma eliminazione
+                    Swal.fire({
+                        title: 'Eliminato!',
+                        text: 'Il ricordo è stato eliminato.',
+                        icon: 'success',
+                        confirmButtonColor: '#c2185b',
+                        background: 'var(--card-bg)',
+                        color: 'var(--text-color)',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            });
         }
 
         // Carica i ricordi salvati all'avvio
