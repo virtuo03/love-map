@@ -60,6 +60,94 @@ class MemoryManager {
         return this.memories[memoryIndex];
     }
 
+     exportMemories() {
+        const exportData = {
+            version: "1.0",
+            app: "Mappa dei Ricordi",
+            memories: this.memories.map(memory => ({
+                ...memory,
+                location: {
+                    lat: memory.location.lat,
+                    lng: memory.location.lng
+                }
+            }))
+        };
+        
+        return JSON.stringify(exportData, null, 2);
+    }
+
+    // Export a single memory
+    exportMemory(memoryId) {
+        const memory = this.getMemoryById(memoryId);
+        if (!memory) return null;
+
+        const exportData = {
+            version: "1.0",
+            app: "Mappa dei Ricordi",
+            memory: {
+                ...memory,
+                location: {
+                    lat: memory.location.lat,
+                    lng: memory.location.lng
+                }
+            }
+        };
+        
+        return JSON.stringify(exportData, null, 2);
+    }
+
+    // Import memories from JSON string
+    importMemories(jsonString) {
+        try {
+            const importData = JSON.parse(jsonString);
+            
+            if (!importData.memories && !importData.memory) {
+                throw new Error("Formato dati non valido");
+            }
+
+            const memoriesToImport = importData.memories || [importData.memory];
+            const importedMemories = [];
+
+            memoriesToImport.forEach(memoryData => {
+                // Validate required fields
+                if (!memoryData.title || !memoryData.location) {
+                    console.warn('Memory skipped - missing required fields:', memoryData);
+                    return;
+                }
+
+                // Create new memory with imported data
+                const newMemory = {
+                    id: Date.now() + Math.random(), // Ensure unique ID
+                    title: memoryData.title,
+                    description: memoryData.description || '',
+                    location: L.latLng(memoryData.location.lat, memoryData.location.lng),
+                    photo: memoryData.photo || null,
+                    date: memoryData.date || new Date().toISOString()
+                };
+
+                this.memories.push(newMemory);
+                importedMemories.push(newMemory);
+            });
+
+            this.saveToStorage();
+            return importedMemories;
+
+        } catch (error) {
+            console.error('Error importing memories:', error);
+            throw new Error('Errore nell\'importare i ricordi: ' + error.message);
+        }
+    }
+
+    // Check if memory already exists (to avoid duplicates)
+    memoryExists(memoryToCheck) {
+        return this.memories.some(memory => 
+            memory.title === memoryToCheck.title &&
+            memory.location.lat === memoryToCheck.location.lat &&
+            memory.location.lng === memoryToCheck.location.lng &&
+            memory.date === memoryToCheck.date
+        );
+    }
+
     async processPhoto(photoFile) {
         if (!photoFile) return null;
 

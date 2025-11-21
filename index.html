@@ -84,7 +84,17 @@
             </div>
 
             <div id="memory-list-section" class="tab-content">
-                <h2 class="section-title"><i class="fas fa-memory"></i> I Tuoi Ricordi</h2>
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-memory"></i> I Tuoi Ricordi</h2>
+                    <div class="import-export-buttons">
+                        <button id="export-memories" class="btn-small btn-export">
+                            <i class="fas fa-share-alt"></i> Esporta
+                        </button>
+                        <button id="import-memories" class="btn-small btn-import">
+                            <i class="fas fa-download"></i> Importa
+                        </button>
+                    </div>
+                </div>
                 <div class="memories-grid" id="memories-container">
                     <!-- I ricordi verranno inseriti qui dinamicamente -->
                 </div>

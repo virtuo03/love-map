@@ -9,6 +9,7 @@ class UIManager {
         this.setupTabNavigation();
         this.createFloatingHearts();
         this.setupCancelEditButton();
+        this.setupImportExportButtons();
     }
 
     setupTabNavigation() {
@@ -37,6 +38,18 @@ class UIManager {
         if (tabId === 'memory-list-section') {
             this.renderMemoryList();
         }
+    }
+
+    setupImportExportButtons() {
+        // Export all memories
+        document.getElementById('export-memories')?.addEventListener('click', () => {
+            this.exportAllMemories();
+        });
+
+        // Import memories
+        document.getElementById('import-memories')?.addEventListener('click', () => {
+            this.showImportModal();
+        });
     }
 
     handleMapClick(e, mapManager) {
@@ -132,28 +145,31 @@ class UIManager {
             `<div class="placeholder"><i class="fas fa-heart"></i></div>`;
 
         return `
-        <div class="memory-card" data-id="${memory.id}">
-            <div class="memory-image">${imageContent}</div>
-            <div class="memory-content">
-                <div class="memory-title"><i class="fas fa-heart"></i> ${memory.title}</div>
-                <div class="memory-desc">${memory.description}</div>
-                <div class="memory-meta">
-                    <div class="memory-date"><i class="fas fa-calendar"></i> ${this.app.memoryManager.formatDate(memory.date)}</div>
-                    <div class="memory-location"><i class="fas fa-map-marker-alt"></i> Mappa</div>
-                </div>
-                <div class="memory-actions">
-                    <button class="btn-small btn-edit" data-id="${memory.id}">
-                        <i class="fas fa-edit"></i> Modifica
-                    </button>
-                    <button class="btn-small btn-view-on-map" data-id="${memory.id}">
-                        <i class="fas fa-map-marked-alt"></i> Vedi sulla Mappa
-                    </button>
-                    <button class="btn-small btn-delete" data-id="${memory.id}">
-                        <i class="fas fa-trash"></i> Elimina
-                    </button>
-                </div>
+    <div class="memory-card" data-id="${memory.id}">
+        <div class="memory-image">${imageContent}</div>
+        <div class="memory-content">
+            <div class="memory-title"><i class="fas fa-heart"></i> ${memory.title}</div>
+            <div class="memory-desc">${memory.description}</div>
+            <div class="memory-meta">
+                <div class="memory-date"><i class="fas fa-calendar"></i> ${this.app.memoryManager.formatDate(memory.date)}</div>
+                <div class="memory-location"><i class="fas fa-map-marker-alt"></i> Mappa</div>
+            </div>
+            <div class="memory-actions">
+                <button class="btn-small btn-edit" data-id="${memory.id}">
+                    <i class="fas fa-edit"></i> Modifica
+                </button>
+                <button class="btn-small btn-share" data-id="${memory.id}">
+                    <i class="fas fa-share"></i> Condividi
+                </button>
+                <button class="btn-small btn-view-on-map" data-id="${memory.id}">
+                    <i class="fas fa-map-marked-alt"></i> Mappa
+                </button>
+                <button class="btn-small btn-delete" data-id="${memory.id}">
+                    <i class="fas fa-trash"></i> Elimina
+                </button>
             </div>
         </div>
+    </div>
     `;
     }
 
@@ -224,6 +240,13 @@ class UIManager {
             });
         });
 
+        document.querySelectorAll('.btn-share').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const memoryId = parseInt(btn.getAttribute('data-id'));
+                this.shareMemory(memoryId);
+            });
+        });
+
         document.querySelectorAll('.btn-delete').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const memoryId = parseInt(btn.getAttribute('data-id'));
@@ -238,6 +261,174 @@ class UIManager {
         const memory = this.app.memoryManager.getMemoryById(memoryId);
         if (memory) {
             this.app.mapManager.focusOnMemory(memory);
+        }
+    }
+
+    // Export all memories
+    exportAllMemories() {
+        const exportData = this.app.memoryManager.exportMemories();
+        this.showExportModal(exportData, 'Tutti i ricordi');
+    }
+
+    // Share single memory
+    shareMemory(memoryId) {
+        const exportData = this.app.memoryManager.exportMemory(memoryId);
+        const memory = this.app.memoryManager.getMemoryById(memoryId);
+        this.showExportModal(exportData, memory.title);
+    }
+
+    // Show export modal with shareable text
+    showExportModal(exportData, title) {
+        const modalHtml = `
+            <div class="import-modal" id="export-modal">
+                <div class="import-modal-content">
+                    <h3><i class="fas fa-share-alt"></i> Condividi Ricordo</h3>
+                    <p>Condividi questo codice con un amico:</p>
+                    <textarea class="import-textarea" readonly>${exportData}</textarea>
+                    <div class="import-actions">
+                        <button id="copy-export" class="btn-small btn-export">
+                            <i class="fas fa-copy"></i> Copia
+                        </button>
+                        <button id="close-export" class="btn-small">
+                            <i class="fas fa-times"></i> Chiudi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        document.getElementById('export-modal')?.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('export-modal');
+        modal.style.display = 'block';
+
+        // Copy to clipboard functionality
+        document.getElementById('copy-export').addEventListener('click', () => {
+            const textarea = modal.querySelector('.import-textarea');
+            textarea.select();
+            document.execCommand('copy');
+
+            // Show success feedback
+            const copyBtn = document.getElementById('copy-export');
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copiato!';
+            copyBtn.style.background = 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)';
+
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.style.background = 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)';
+            }, 2000);
+        });
+
+        // Close modal
+        document.getElementById('close-export').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+
+    // Show import modal
+    showImportModal() {
+        const modalHtml = `
+            <div class="import-modal" id="import-modal">
+                <div class="import-modal-content">
+                    <h3><i class="fas fa-download"></i> Importa Ricordi</h3>
+                    <p>Incolla qui il codice del ricordo da importare:</p>
+                    <textarea class="import-textarea" placeholder="Incolla il codice JSON qui..."></textarea>
+                    <div class="import-actions">
+                        <button id="confirm-import" class="btn-small btn-import">
+                            <i class="fas fa-download"></i> Importa
+                        </button>
+                        <button id="close-import" class="btn-small">
+                            <i class="fas fa-times"></i> Annulla
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        document.getElementById('import-modal')?.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('import-modal');
+        modal.style.display = 'block';
+
+        // Import functionality
+        document.getElementById('confirm-import').addEventListener('click', () => {
+            this.handleImport();
+        });
+
+        // Close modal
+        document.getElementById('close-import').addEventListener('click', () => {
+            modal.remove();
+        });
+
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function closeOnEscape(e) {
+            if (e.key === 'Escape') {
+                modal.remove();
+                document.removeEventListener('keydown', closeOnEscape);
+            }
+        });
+    }
+
+    // Handle import process
+    async handleImport() {
+        const textarea = document.querySelector('#import-modal .import-textarea');
+        const importData = textarea.value.trim();
+
+        if (!importData) {
+            alert('Per favore, inserisci un codice valido.');
+            return;
+        }
+
+        try {
+            const importedMemories = this.app.memoryManager.importMemories(importData);
+
+            // Close modal
+            document.getElementById('import-modal').remove();
+
+            // Show success message
+            await Swal.fire({
+                title: 'Importazione Completata!',
+                html: `Hai importato con successo ${importedMemories.length} ricordo(i).`,
+                icon: 'success',
+                confirmButtonColor: '#c2185b',
+                background: 'var(--card-bg)',
+                color: 'var(--text-color)'
+            });
+
+            // Refresh the memory list and map
+            this.renderMemoryList();
+            importedMemories.forEach(memory => {
+                this.app.mapManager.addMemoryToMap(memory);
+            });
+
+        } catch (error) {
+            await Swal.fire({
+                title: 'Errore di Importazione',
+                text: error.message,
+                icon: 'error',
+                confirmButtonColor: '#c2185b',
+                background: 'var(--card-bg)',
+                color: 'var(--text-color)'
+            });
         }
     }
 
