@@ -13,7 +13,7 @@ class MemoryClustering {
     initializeClusterGroup() {
         this.markerClusterGroup = L.markerClusterGroup({
             chunkedLoading: true,
-            iconCreateFunction: this.createClusterIcon,
+            iconCreateFunction: (cluster) => this.createClusterIcon(cluster),
             spiderfyOnMaxZoom: true,
             showCoverageOnHover: false,
             zoomToBoundsOnClick: true,
@@ -27,12 +27,33 @@ class MemoryClustering {
     // Crea un'icona personalizzata per i cluster
     createClusterIcon(cluster) {
         const count = cluster.getChildCount();
-        const size = count < 10 ? 'small' : count < 50 ? 'medium' : 'large';
+        let size, fontSize, heartSize;
         
+        if (count < 10) {
+            size = 'small';
+            fontSize = '14px';
+            heartSize = '20px';
+        } else if (count < 50) {
+            size = 'medium';
+            fontSize = '16px';
+            heartSize = '24px';
+        } else {
+            size = 'large';
+            fontSize = '18px';
+            heartSize = '28px';
+        }
+        
+        // Create a custom cluster icon with heart
         return L.divIcon({
-            html: `<div class="cluster-icon cluster-${size}">${count}</div>`,
-            className: 'memory-cluster',
-            iconSize: L.point(40, 40)
+            html: `
+                <div class="heart-cluster heart-cluster-${size}">
+                    <i class="fas fa-heart"></i>
+                    <span class="cluster-count">${count}</span>
+                </div>
+            `,
+            className: `heart-cluster-icon heart-cluster-${size}`,
+            iconSize: L.point(40, 40),
+            iconAnchor: [20, 20]
         });
     }
 
