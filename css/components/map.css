@@ -1,9 +1,10 @@
 #map-section {
     padding: 0;
+    flex: 1;
 }
 
 #map {
-    height: 300px;
+    height: 40vh;
     width: 100%;
     z-index: 1;
 }
@@ -14,6 +15,10 @@
     padding: 1.2rem;
     box-shadow: 0 -2px 10px var(--shadow);
     z-index: 2;
+    max-height: 25vh;
+    /* Reduced to give more space to map */
+    overflow-y: auto;
+    /* Add scrolling if content overflows */
 }
 
 .form-group {
@@ -169,13 +174,6 @@ button:hover {
     border: none;
 }
 
-/* Ensure map container is properly sized */
-#map {
-    height: 300px;
-    width: 100%;
-    z-index: 1;
-}
-
 /* Heart Cluster Styles */
 .heart-cluster-icon {
     background: transparent !important;
@@ -272,11 +270,4 @@ button:hover {
 /* Ensure cluster icons are above other map elements */
 .heart-cluster-icon {
     z-index: 1000;
-}
-
-@media (min-width: 768px) {
-    #map {
-        flex: 1;
-        height: 100%;
-    }
 }
