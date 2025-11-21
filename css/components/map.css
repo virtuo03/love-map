@@ -124,7 +124,7 @@ button:hover {
 
 .leaflet-popup-content-wrapper {
     border-radius: 8px;
-    background: linear-gradient(135deg, #1a1a1a 50%, #2a2a2a 100%) !important;
+    background: linear-gradient(135deg, #fc7070 50%, #970101 100%) !important;
     box-shadow: 0 4px 15px var(--shadow);
 }
 
