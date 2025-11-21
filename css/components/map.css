@@ -15,7 +15,7 @@
     padding: 1.2rem;
     box-shadow: 0 -2px 10px var(--shadow);
     z-index: 2;
-    max-height: 25vh;
+    max-height: 45vh;
     /* Reduced to give more space to map */
     overflow-y: auto;
     /* Add scrolling if content overflows */
