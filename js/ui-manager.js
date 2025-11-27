@@ -12,6 +12,11 @@ class UIManager {
         this.setupCancelEditButton();
         this.setupImportExportButtons();
         this.setupLayoutToggle();
+        
+        // Load initial layout preference
+        const savedLayout = localStorage.getItem('memoryLayout') || 'vertical';
+        this.currentLayout = savedLayout;
+        this.applyLayout(savedLayout, false); // Don't re-render during init
     }
 
     setupLayoutToggle() {
@@ -26,8 +31,12 @@ class UIManager {
 
     switchLayout(layout) {
         this.currentLayout = layout;
-        const container = document.getElementById('memories-container');
+        this.applyLayout(layout, true); // Re-render when switching layouts
+    }
 
+    applyLayout(layout, shouldRender = true) {
+        const container = document.getElementById('memories-container');
+        
         // Update layout classes
         container.classList.remove('vertical-layout', 'horizontal-layout');
         container.classList.add(layout + '-layout');
@@ -36,14 +45,19 @@ class UIManager {
         document.querySelectorAll('.layout-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-
+        
         const activeBtn = document.getElementById(`layout-${layout}`);
         if (activeBtn) {
             activeBtn.classList.add('active');
         }
-
+        
         // Save preference to localStorage
         localStorage.setItem('memoryLayout', layout);
+        
+        // Re-render the memory list with the new layout if requested
+        if (shouldRender) {
+            this.renderMemoryList();
+        }
     }
 
     setupTabNavigation() {
@@ -154,9 +168,8 @@ class UIManager {
         const container = document.getElementById('memories-container');
         const memories = this.app.memoryManager.getAllMemories();
 
-        // Load layout preference
-        const savedLayout = localStorage.getItem('memoryLayout') || 'vertical';
-        this.switchLayout(savedLayout);
+        // Apply current layout without triggering re-render
+        this.applyLayout(this.currentLayout, false);
 
         if (memories.length === 0) {
             container.innerHTML = this.getEmptyStateHTML();
@@ -182,6 +195,14 @@ class UIManager {
             `<img src="${memory.photo}" alt="${memory.title}">` :
             `<div class="placeholder"><i class="fas fa-heart"></i></div>`;
 
+        if (this.currentLayout === 'horizontal') {
+            return this.createHorizontalCardHTML(memory, imageContent);
+        } else {
+            return this.createVerticalCardHTML(memory, imageContent);
+        }
+    }
+
+    createVerticalCardHTML(memory, imageContent) {
         return `
     <div class="memory-card" data-id="${memory.id}">
         <div class="memory-image">${imageContent}</div>
@@ -206,6 +227,36 @@ class UIManager {
                     <i class="fas fa-trash"></i> Elimina
                 </button>
             </div>
+        </div>
+    </div>
+    `;
+    }
+
+    createHorizontalCardHTML(memory, imageContent) {
+        return `
+    <div class="memory-card" data-id="${memory.id}">
+        <div class="memory-image">${imageContent}</div>
+        <div class="memory-content">
+            <div class="memory-title">${memory.title}</div>
+            <div class="memory-desc">${memory.description}</div>
+            <div class="memory-meta">
+                <div class="memory-date"><i class="fas fa-calendar"></i> ${this.app.memoryManager.formatDate(memory.date)}</div>
+                <div class="memory-location"><i class="fas fa-map-marker-alt"></i> Mappa</div>
+            </div>
+        </div>
+        <div class="memory-actions">
+            <button class="btn-small btn-edit" data-id="${memory.id}" title="Modifica">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-small btn-share" data-id="${memory.id}" title="Condividi">
+                <i class="fas fa-share"></i>
+            </button>
+            <button class="btn-small btn-view-on-map" data-id="${memory.id}" title="Mappa">
+                <i class="fas fa-map-marked-alt"></i>
+            </button>
+            <button class="btn-small btn-delete" data-id="${memory.id}" title="Elimina">
+                <i class="fas fa-trash"></i>
+            </button>
         </div>
     </div>
     `;
