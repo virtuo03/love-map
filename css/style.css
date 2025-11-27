@@ -21,6 +21,8 @@
     --background: #fff5f5;
     --card: #ffffff;
     --shadow: rgba(195, 24, 91, 0.15);
+    --card-bg: #ffffff;
+    --text-color: #5e3a3a;
 }
 
 body {
@@ -33,7 +35,7 @@ body {
 .app-container {
     display: flex;
     flex-direction: column;
-     height: calc(100vh - 120px);
+    height: calc(100vh - 120px);
 }
 
 /* Scrollbar personalizzata */
@@ -57,13 +59,33 @@ body {
 
 /* Animazioni */
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 .pulse {
     animation: pulse 2s infinite;
+}
+
+/* Modern glass morphism effect */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Smooth transitions */
+* {
+    transition: all 0.3s ease;
 }
 
 /* Responsive design */

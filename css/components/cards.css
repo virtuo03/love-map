@@ -4,14 +4,54 @@
     background: var(--background);
 }
 
-.section-title {
-    color: var(--primary);
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--primary-light);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Updated layout for controls - all on one line */
+.controls-container {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.layout-toggle {
+    display: flex;
     gap: 0.5rem;
+
+}
+
+.layout-btn {
+    background: var(--card) !important;
+    color: var(--text-light) !important;
+    border: 2px solid var(--primary-light) !important;
+    padding: 0.5rem !important;
+    border-radius: 8px !important;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.layout-btn.active {
+    background: var(--primary) !important;
+    color: white !important;
+    border-color: var(--primary) !important;
+}
+
+.import-export-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
 }
 
 .memories-grid {
@@ -21,37 +61,108 @@
     padding-bottom: 1rem;
 }
 
+/* Vertical Layout (Default) */
+.memories-grid.vertical-layout {
+    grid-template-columns: 1fr;
+}
+
+/* Horizontal Layout */
+.memories-grid.horizontal-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.memories-grid.horizontal-layout .memory-card {
+    display: flex;
+    height: 150px;
+    max-height: 150px;
+}
+
+.memories-grid.horizontal-layout .memory-image {
+    width: 150px;
+    height: 100%;
+    flex-shrink: 0;
+}
+
+.memories-grid.horizontal-layout .memory-content {
+    flex: 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.memories-grid.horizontal-layout .memory-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.memories-grid.horizontal-layout .memory-desc {
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 0.5rem;
+}
+
+.memories-grid.horizontal-layout .memory-meta {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--primary-light);
+}
+
+.memories-grid.horizontal-layout .memory-actions {
+    margin-top: 0.5rem;
+    gap: 0.3rem;
+}
+
+.memories-grid.horizontal-layout .memory-actions .btn-small {
+    min-width: auto;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+}
+
 .memory-card {
     background: linear-gradient(135deg, var(--card) 0%, #fff5f5 100%);
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 15px var(--shadow);
-    transition: all 0.3s;
+    box-shadow: 0 4px 20px var(--shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
 }
 
 .memory-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px var(--shadow);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(194, 24, 91, 0.2);
 }
 
 .memory-image {
     height: 200px;
     overflow: hidden;
-    background: var(--primary-light);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--accent) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 .memory-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.memory-card:hover .memory-image img {
+    transform: scale(1.05);
 }
 
 .memory-image .placeholder {
     font-size: 3rem;
     color: var(--primary);
+    opacity: 0.7;
 }
 
 .memory-content {
@@ -59,19 +170,21 @@
 }
 
 .memory-title {
-    font-weight: bold;
+    font-weight: 700;
     margin-bottom: 0.8rem;
     color: var(--primary);
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    line-height: 1.3;
 }
 
 .memory-desc {
     color: var(--text-light);
     margin-bottom: 1rem;
     line-height: 1.5;
+    font-size: 0.95rem;
 }
 
 .memory-meta {
@@ -80,7 +193,7 @@
     align-items: center;
     margin-top: 1.2rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--primary-light);
+    border-top: 1px solid rgba(194, 24, 91, 0.1);
 }
 
 .memory-date {
@@ -89,6 +202,7 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
+    font-weight: 500;
 }
 
 .memory-location {
@@ -97,6 +211,7 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
+    font-weight: 500;
 }
 
 .btn-edit {
@@ -114,16 +229,8 @@
 .memory-actions .btn-small {
     flex: 1;
     min-width: 120px;
-}
-
-@media (max-width: 767px) {
-    .memory-actions {
-        flex-direction: column;
-    }
-
-    .memory-actions .btn-small {
-        width: 100%;
-    }
+    border-radius: 10px;
+    font-weight: 600;
 }
 
 .empty-state {
@@ -145,21 +252,6 @@
 }
 
 /* Import/Export Section */
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.import-export-buttons {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
 .btn-export {
     background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
 }
@@ -192,18 +284,21 @@
     transform: translate(-50%, -50%);
     background: white;
     padding: 2rem;
-    border-radius: 16px;
+    border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-width: 500px;
     width: 90%;
     max-height: 80vh;
     overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
 }
 
 .import-modal h3 {
     color: var(--primary);
     margin-bottom: 1rem;
     text-align: center;
+    font-size: 1.5rem;
 }
 
 .import-textarea {
@@ -211,11 +306,12 @@
     height: 200px;
     padding: 1rem;
     border: 2px solid var(--primary-light);
-    border-radius: 8px;
+    border-radius: 12px;
     font-family: monospace;
     font-size: 0.9rem;
     resize: vertical;
     margin-bottom: 1rem;
+    background: var(--background);
 }
 
 .import-actions {
@@ -224,41 +320,86 @@
     justify-content: flex-end;
 }
 
+/* MOBILE STYLES - Keep everything on one line */
 @media (max-width: 767px) {
     .section-header {
         flex-direction: column;
         align-items: stretch;
     }
 
+    .controls-container {
+        flex-direction: row; /* Keep as row on mobile */
+        gap: 0.5rem;
+        flex-wrap: nowrap;
+    }
+
+    .layout-toggle {
+        justify-content: flex-end;
+    }
+
     .import-export-buttons {
-        justify-content: center;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+    }
+
+    /* Make buttons smaller on mobile to fit */
+    .import-export-buttons .btn-small {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+        min-width: auto;
+    }
+
+    .import-export-buttons .btn-small i {
+        margin-right: 0.3rem;
+    }
+
+    .layout-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0.4rem !important;
     }
 
     .import-modal-content {
         width: 95%;
         padding: 1.5rem;
     }
+
+    .memories-grid.horizontal-layout .memory-card {
+        flex-direction: column;
+        height: auto;
+        max-height: none;
+    }
+
+    .memories-grid.horizontal-layout .memory-image {
+        width: 100%;
+        height: 120px;
+    }
 }
 
 @media (min-width: 768px) {
-    .memories-grid {
+    .memories-grid.vertical-layout {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .memories-grid.horizontal-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .controls-container {
+        flex-wrap: nowrap;
     }
 }
 
 @media (min-width: 1024px) {
-    .memories-grid {
+    .memories-grid.vertical-layout {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
-/* SweetAlert2 custom styles */
 /* SweetAlert2 custom styles - Romantic Theme */
 .custom-swal-popup {
     border-radius: 20px !important;
-    box-shadow:
-        0 20px 60px rgba(194, 24, 91, 0.3),
-        0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 20px 60px rgba(194, 24, 91, 0.3) !important;
     background: linear-gradient(135deg, #fff5f8 0%, #ffe6ee 50%, #ffd6e7 100%) !important;
     border: 2px solid rgba(194, 24, 91, 0.2) !important;
     backdrop-filter: blur(20px) !important;
@@ -299,17 +440,13 @@
     background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
     border: none !important;
     transition: all 0.3s ease !important;
-    box-shadow:
-        0 4px 15px rgba(194, 24, 91, 0.4),
-        0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 4px 15px rgba(194, 24, 91, 0.4) !important;
     margin: 0 8px !important;
 }
 
 .custom-swal-confirm:hover {
     transform: translateY(-2px) !important;
-    box-shadow:
-        0 6px 20px rgba(194, 24, 91, 0.6),
-        0 3px 6px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 6px 20px rgba(194, 24, 91, 0.6) !important;
 }
 
 .custom-swal-cancel {
@@ -353,17 +490,4 @@
 
 .swal2-success .custom-swal-title {
     color: #2E7D32 !important;
-}
-
-/* Add some decorative hearts to the SweetAlert */
-.custom-swal-popup .swal2-icon {
-    position: relative;
-}
-
-.custom-swal-popup .swal2-icon::before {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    font-size: 20px;
-    opacity: 0.3;
 }

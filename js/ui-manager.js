@@ -3,6 +3,7 @@ class UIManager {
         this.app = app;
         this.currentTab = 'map-section';
         this.deferredPrompt = null;
+        this.currentLayout = 'vertical'; // 'vertical' or 'horizontal'
     }
 
     init() {
@@ -10,6 +11,39 @@ class UIManager {
         this.createFloatingHearts();
         this.setupCancelEditButton();
         this.setupImportExportButtons();
+        this.setupLayoutToggle();
+    }
+
+    setupLayoutToggle() {
+        const verticalBtn = document.getElementById('layout-vertical');
+        const horizontalBtn = document.getElementById('layout-horizontal');
+
+        if (verticalBtn && horizontalBtn) {
+            verticalBtn.addEventListener('click', () => this.switchLayout('vertical'));
+            horizontalBtn.addEventListener('click', () => this.switchLayout('horizontal'));
+        }
+    }
+
+    switchLayout(layout) {
+        this.currentLayout = layout;
+        const container = document.getElementById('memories-container');
+
+        // Update layout classes
+        container.classList.remove('vertical-layout', 'horizontal-layout');
+        container.classList.add(layout + '-layout');
+
+        // Update active button states
+        document.querySelectorAll('.layout-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const activeBtn = document.getElementById(`layout-${layout}`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        // Save preference to localStorage
+        localStorage.setItem('memoryLayout', layout);
     }
 
     setupTabNavigation() {
@@ -119,6 +153,10 @@ class UIManager {
     renderMemoryList() {
         const container = document.getElementById('memories-container');
         const memories = this.app.memoryManager.getAllMemories();
+
+        // Load layout preference
+        const savedLayout = localStorage.getItem('memoryLayout') || 'vertical';
+        this.switchLayout(savedLayout);
 
         if (memories.length === 0) {
             container.innerHTML = this.getEmptyStateHTML();

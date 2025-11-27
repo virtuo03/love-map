@@ -60,7 +60,7 @@ class MemoryManager {
         return this.memories[memoryIndex];
     }
 
-     exportMemories() {
+    exportMemories() {
         const exportData = {
             version: "1.0",
             app: "Mappa dei Ricordi",
@@ -96,7 +96,7 @@ class MemoryManager {
         return JSON.stringify(exportData, null, 2);
     }
 
-    // Import memories from JSON string
+    // Import memories from JSON string - FIXED: Preserve original IDs
     importMemories(jsonString) {
         try {
             const importData = JSON.parse(jsonString);
@@ -115,9 +115,20 @@ class MemoryManager {
                     return;
                 }
 
+                // Check if memory already exists to avoid duplicates
+                if (this.memoryExists(memoryData)) {
+                    console.log('Memory already exists, skipping:', memoryData.title);
+                    return;
+                }
+
+                // Preserve original ID if available, otherwise create new one
+                const memoryId = memoryData.id && !this.getMemoryById(memoryData.id) 
+                    ? memoryData.id 
+                    : Date.now() + Math.random();
+
                 // Create new memory with imported data
                 const newMemory = {
-                    id: Date.now() + Math.random(), // Ensure unique ID
+                    id: memoryId,
                     title: memoryData.title,
                     description: memoryData.description || '',
                     location: L.latLng(memoryData.location.lat, memoryData.location.lng),
@@ -141,10 +152,12 @@ class MemoryManager {
     // Check if memory already exists (to avoid duplicates)
     memoryExists(memoryToCheck) {
         return this.memories.some(memory => 
-            memory.title === memoryToCheck.title &&
-            memory.location.lat === memoryToCheck.location.lat &&
-            memory.location.lng === memoryToCheck.location.lng &&
-            memory.date === memoryToCheck.date
+            memory.id === memoryToCheck.id || (
+                memory.title === memoryToCheck.title &&
+                memory.location.lat === memoryToCheck.location.lat &&
+                memory.location.lng === memoryToCheck.location.lng &&
+                memory.date === memoryToCheck.date
+            )
         );
     }
 
