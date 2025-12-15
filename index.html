@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +27,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Scatola dei Ricordi">
 </head>
+
 <body>
     <header>
         <h1><i class="heart-icon fas fa-heart"></i> Mappa dei Ricordi <i class="heart-icon fas fa-heart"></i></h1>
@@ -33,54 +35,55 @@
     </header>
 
     <div class="app-container">
-        <!-- Main Map View -->
-        <div id="map-section" class="tab-content active">
-            <div id="map"></div>
-            
-            <!-- Sidebar for memory form -->
-            <div class="sidebar" id="memory-form-sidebar">
-                <button class="btn-close-sidebar" id="close-sidebar">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h2><i class="fas fa-plus-circle"></i> Aggiungi un Ricordo</h2>
-                <form id="memory-form">
-                    <div class="form-group">
-                        <label for="memory-title"><i class="fas fa-heading"></i> Titolo</label>
-                        <input type="text" id="memory-title" required placeholder="Es. Il nostro primo incontro">
-                    </div>
-                    <div class="form-group">
-                        <label for="memory-desc"><i class="fas fa-comment"></i> Descrizione</label>
-                        <textarea id="memory-desc" required
-                            placeholder="Racconta questo momento speciale..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="memory-date"><i class="fas fa-calendar-day"></i> Data del ricordo</label>
-                        <input type="date" id="memory-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="memory-location"><i class="fas fa-map-marker-alt"></i> Posizione (clicca sulla
-                            mappa)</label>
-                        <input type="text" id="memory-location" readonly
-                            placeholder="Clicca sulla mappa per selezionare">
-                    </div>
-                    <div class="form-group">
-                        <label for="memory-photo"><i class="fas fa-camera"></i> Aggiungi una foto</label>
-                        <input type="file" id="memory-photo" accept="image/*">
-                    </div>
-                    <div class="button-group">
-                        <button type="submit"><i class="fas fa-save"></i> Salva Ricordo</button>
-                        <button type="button" id="cancel-edit" style="display: none;">
-                            <i class="fas fa-times"></i> Annulla
-                        </button>
-                    </div>
-                </form>
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="map-section">
+                <i class="fas fa-map-marked-alt"></i> Mappa
+            </button>
+            <button class="tab-button" data-tab="memory-list-section">
+                <i class="fas fa-list"></i> I Tuoi Ricordi
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div id="map-section" class="tab-content active">
+                <div id="map"></div>
+                <div class="sidebar">
+                    <h2><i class="fas fa-plus-circle"></i> Aggiungi un Ricordo</h2>
+                    <form id="memory-form">
+                        <div class="form-group">
+                            <label for="memory-title"><i class="fas fa-heading"></i> Titolo</label>
+                            <input type="text" id="memory-title" required placeholder="Es. Il nostro primo incontro">
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-desc"><i class="fas fa-comment"></i> Descrizione</label>
+                            <textarea id="memory-desc" required
+                                placeholder="Racconta questo momento speciale..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-date"><i class="fas fa-calendar-day"></i> Data del ricordo</label>
+                            <input type="date" id="memory-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-location"><i class="fas fa-map-marker-alt"></i> Posizione (clicca sulla
+                                mappa)</label>
+                            <input type="text" id="memory-location" readonly
+                                placeholder="Clicca sulla mappa per selezionare">
+                        </div>
+                        <div class="form-group">
+                            <label for="memory-photo"><i class="fas fa-camera"></i> Aggiungi una foto</label>
+                            <input type="file" id="memory-photo" accept="image/*">
+                        </div>
+                        <div class="button-group">
+                            <button type="submit"><i class="fas fa-save"></i> Salva Ricordo</button>
+                            <button type="button" id="cancel-edit" style="display: none;">
+                                <i class="fas fa-times"></i> Annulla
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            
-            <!-- Overlay for memory list -->
-            <div class="memory-list-overlay" id="memory-list-overlay">
-                <button class="btn-close-sidebar" id="close-memory-list">
-                    <i class="fas fa-times"></i>
-                </button>
+
+            <div id="memory-list-section" class="tab-content">
                 <div class="section-header">
                     <div class="controls-container">
                         <div class="layout-toggle">
@@ -108,22 +111,6 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <button class="nav-btn active" data-tab="map-section">
-            <i class="fas fa-map-marked-alt"></i>
-            <span>Mappa</span>
-        </button>
-        <button class="nav-btn" id="nav-memories">
-            <i class="fas fa-list"></i>
-            <span>Ricordi</span>
-        </button>
-        <button class="nav-btn" id="nav-add">
-            <i class="fas fa-plus"></i>
-            <span>Aggiungi</span>
-        </button>
-    </div>
-
     <!-- External JS -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -136,4 +123,5 @@
     <script src="js/ui-manager.js"></script>
     <script src="js/app.js"></script>
 </body>
+
 </html>
