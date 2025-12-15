@@ -35,7 +35,7 @@ body {
 .app-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 120px);
+    height: 100vh; 
 }
 
 /* Scrollbar personalizzata */
@@ -92,6 +92,6 @@ body {
 @media (min-width: 768px) {
     .app-container {
         flex-direction: row;
-        height: calc(100vh - 76px);
+        height: 100vh;
     }
 }

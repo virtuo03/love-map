@@ -6,20 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mappa dei Ricordi</title>
 
-    <!-- External CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
-    <!-- Internal CSS -->
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/components/header.css">
     <link rel="stylesheet" href="css/components/tabs.css">
     <link rel="stylesheet" href="css/components/map.css">
     <link rel="stylesheet" href="css/components/cards.css">
 
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#c2185b">
     <link rel="apple-touch-icon" href="icons/icon-152x152.png">
@@ -29,25 +25,14 @@
 </head>
 
 <body>
-    <header>
-        <h1><i class="heart-icon fas fa-heart"></i> Mappa dei Ricordi <i class="heart-icon fas fa-heart"></i></h1>
-        <p class="subtitle">Mappa dei nostri momenti speciali</p>
-    </header>
-
     <div class="app-container">
-        <div class="tab-navigation">
-            <button class="tab-button active" data-tab="map-section">
-                <i class="fas fa-map-marked-alt"></i> Mappa
-            </button>
-            <button class="tab-button" data-tab="memory-list-section">
-                <i class="fas fa-list"></i> I Tuoi Ricordi
-            </button>
-        </div>
-
         <div class="main-content">
             <div id="map-section" class="tab-content active">
                 <div id="map"></div>
-                <div class="sidebar">
+                </div>
+
+            <div id="add-memory-section" class="tab-content">
+                <div class="sidebar form-only">
                     <h2><i class="fas fa-plus-circle"></i> Aggiungi un Ricordo</h2>
                     <form id="memory-form">
                         <div class="form-group">
@@ -80,6 +65,9 @@
                             </button>
                         </div>
                     </form>
+                    <p class="map-reminder">
+                        <i class="fas fa-info-circle"></i> Usa il tab Mappa per selezionare la posizione!
+                    </p>
                 </div>
             </div>
 
@@ -105,18 +93,27 @@
                     </div>
                 </div>
                 <div class="memories-grid vertical-layout" id="memories-container">
-                    <!-- I ricordi verranno inseriti qui dinamicamente -->
-                </div>
+                    </div>
             </div>
+        </div>
+
+        <div class="tab-navigation bottom-nav">
+            <button class="tab-button" data-tab="add-memory-section">
+                <i class="fas fa-plus-circle"></i> Aggiungi
+            </button>
+            <button class="tab-button active main-tab-button" data-tab="map-section">
+                <i class="fas fa-map-marked-alt"></i> Mappa
+            </button>
+            <button class="tab-button" data-tab="memory-list-section">
+                <i class="fas fa-list"></i> Ricordi
+            </button>
         </div>
     </div>
 
-    <!-- External JS -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
-    <!-- Internal JS -->
     <script src="js/clustering.js"></script>
     <script src="js/map.js"></script>
     <script src="js/memory-manager.js"></script>

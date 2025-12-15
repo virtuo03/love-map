@@ -1,7 +1,7 @@
 class UIManager {
     constructor(app) {
         this.app = app;
-        this.currentTab = 'map-section';
+        this.currentTab = 'map-section'; // Imposta la mappa come tab predefinito
         this.deferredPrompt = null;
         this.currentLayout = 'vertical'; // 'vertical' or 'horizontal'
     }
@@ -69,6 +69,9 @@ class UIManager {
                 this.switchTab(tabId);
             });
         });
+        
+        // Assicurati che il tab iniziale sia attivo
+        this.switchTab(this.currentTab);
     }
 
     switchTab(tabId) {
@@ -76,15 +79,25 @@ class UIManager {
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
 
-        // Activate selected tab
-        document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+        // Activate selected tab button
+        const selectedButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+        if (selectedButton) {
+            selectedButton.classList.add('active');
+        }
+        
+        // Activate selected tab content
         document.getElementById(tabId).classList.add('active');
 
         this.currentTab = tabId;
 
-        // If switching to memory list, render it
+        // Se si passa alla lista dei ricordi, fai il render
         if (tabId === 'memory-list-section') {
             this.renderMemoryList();
+        }
+        
+        // Se si passa alla mappa, invalida la dimensione (importante per Leaflet)
+        if (tabId === 'map-section' && this.app.mapManager.map) {
+            this.app.mapManager.map.invalidateSize();
         }
     }
 
@@ -103,6 +116,11 @@ class UIManager {
     handleMapClick(e, mapManager) {
         const locationString = mapManager.setSelectedLocation(e.latlng);
         document.getElementById('memory-location').value = locationString;
+        
+        // Se si seleziona una posizione dalla mappa, sposta l'utente al form (opzionale)
+        if (this.currentTab !== 'add-memory-section') {
+            this.switchTab('add-memory-section');
+        }
     }
 
     getFormData(mapManager) {
@@ -121,6 +139,9 @@ class UIManager {
             cancelBtn.addEventListener('click', () => {
                 this.resetForm(this.app.mapManager);
                 cancelBtn.style.display = 'none';
+                
+                // Torna al tab Mappa dopo l'annullamento dell'editing
+                this.switchTab('map-section'); 
             });
         }
     }
@@ -133,8 +154,8 @@ class UIManager {
         mapManager.clearSelection();
         document.getElementById('memory-location').value = '';
 
-        // Reset form title and button
-        const formTitle = document.querySelector('.sidebar h2');
+        // Reset form title and button (all'interno della sezione #add-memory-section)
+        const formTitle = document.querySelector('#add-memory-section h2');
         const submitButton = document.querySelector('#memory-form button[type="submit"]');
 
         formTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Aggiungi un Ricordo';
@@ -269,8 +290,8 @@ class UIManager {
             return;
         }
 
-        // Switch to map tab
-        this.switchTab('map-section');
+        // Switch to the new form section
+        this.switchTab('add-memory-section');
 
         // Populate form with memory data
         this.populateEditForm(memory);
@@ -297,8 +318,8 @@ class UIManager {
         // Store the memory ID being edited
         document.getElementById('memory-form').setAttribute('data-editing-id', memory.id);
 
-        // Change form title and button
-        const formTitle = document.querySelector('.sidebar h2');
+        // Change form title and button (selezionando all'interno della sezione form)
+        const formTitle = document.querySelector('#add-memory-section h2');
         const submitButton = document.querySelector('#memory-form button[type="submit"]');
 
         formTitle.innerHTML = '<i class="fas fa-edit"></i> Modifica Ricordo';
@@ -310,7 +331,7 @@ class UIManager {
             cancelBtn.style.display = 'block';
         }
 
-        // Scroll to form
+        // Scroll to form (per sicurezza, se la sidebar è scrollabile)
         document.querySelector('.sidebar').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -603,7 +624,7 @@ class UIManager {
         installButton.title = 'Installa app';
         Object.assign(installButton.style, {
             position: 'fixed',
-            bottom: '20px',
+            bottom: '80px', // Spostato sopra la bottom nav
             right: '20px',
             zIndex: '1000',
             background: 'linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%)',
