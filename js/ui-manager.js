@@ -3,21 +3,128 @@ class UIManager {
         this.app = app;
         this.currentTab = 'map-section';
         this.deferredPrompt = null;
-        this.currentLayout = 'vertical'; // 'vertical' or 'horizontal'
+        this.currentLayout = 'vertical';
+        this.isFormOpen = false;
+        this.isMemoryListOpen = false;
     }
 
     init() {
-        this.setupTabNavigation();
+        this.setupBottomNavigation();
+        this.setupFloatingActionButton();
         this.createFloatingHearts();
         this.setupCancelEditButton();
         this.setupImportExportButtons();
         this.setupLayoutToggle();
+        this.setupCloseButtons();
         
         // Load initial layout preference
         const savedLayout = localStorage.getItem('memoryLayout') || 'vertical';
         this.currentLayout = savedLayout;
-        this.applyLayout(savedLayout, false); // Don't re-render during init
+        this.applyLayout(savedLayout, false);
     }
+
+    setupBottomNavigation() {
+        const mapBtn = document.querySelector('[data-tab="map-section"]');
+        const memoriesBtn = document.getElementById('nav-memories');
+        const addBtn = document.getElementById('nav-add');
+
+        // Map button - always shows map
+        mapBtn.addEventListener('click', () => {
+            this.closeAllOverlays();
+            this.updateActiveNav(mapBtn);
+        });
+
+        // Memories button - shows memory list overlay
+        memoriesBtn.addEventListener('click', () => {
+            this.toggleMemoryListOverlay();
+            this.updateActiveNav(memoriesBtn);
+        });
+
+        // Add button - shows form overlay
+        addBtn.addEventListener('click', () => {
+            this.toggleMemoryFormOverlay();
+            this.updateActiveNav(addBtn);
+        });
+    }
+
+    updateActiveNav(activeButton) {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        activeButton.classList.add('active');
+    }
+
+    setupFloatingActionButton() {
+        const fab = document.getElementById('fab-add-memory');
+        fab.addEventListener('click', () => {
+            this.toggleMemoryFormOverlay();
+            this.updateActiveNav(document.getElementById('nav-add'));
+        });
+    }
+
+    toggleMemoryFormOverlay() {
+        const sidebar = document.getElementById('memory-form-sidebar');
+        const memoryListOverlay = document.getElementById('memory-list-overlay');
+        
+        if (this.isFormOpen) {
+            sidebar.classList.remove('active');
+            this.isFormOpen = false;
+            this.updateActiveNav(document.querySelector('[data-tab="map-section"]'));
+        } else {
+            // Close memory list if open
+            if (this.isMemoryListOpen) {
+                memoryListOverlay.classList.remove('active');
+                this.isMemoryListOpen = false;
+            }
+            
+            sidebar.classList.add('active');
+            this.isFormOpen = true;
+            this.resetForm(this.app.mapManager);
+        }
+    }
+
+    toggleMemoryListOverlay() {
+        const sidebar = document.getElementById('memory-form-sidebar');
+        const memoryListOverlay = document.getElementById('memory-list-overlay');
+        
+        if (this.isMemoryListOpen) {
+            memoryListOverlay.classList.remove('active');
+            this.isMemoryListOpen = false;
+            this.updateActiveNav(document.querySelector('[data-tab="map-section"]'));
+        } else {
+            // Close form if open
+            if (this.isFormOpen) {
+                sidebar.classList.remove('active');
+                this.isFormOpen = false;
+            }
+            
+            memoryListOverlay.classList.add('active');
+            this.isMemoryListOpen = true;
+            this.renderMemoryList();
+        }
+    }
+
+    closeAllOverlays() {
+        const sidebar = document.getElementById('memory-form-sidebar');
+        const memoryListOverlay = document.getElementById('memory-list-overlay');
+        
+        sidebar.classList.remove('active');
+        memoryListOverlay.classList.remove('active');
+        this.isFormOpen = false;
+        this.isMemoryListOpen = false;
+    }
+
+    setupCloseButtons() {
+        document.getElementById('close-sidebar').addEventListener('click', () => {
+            this.toggleMemoryFormOverlay();
+        });
+        
+        document.getElementById('close-memory-list').addEventListener('click', () => {
+            this.toggleMemoryListOverlay();
+        });
+    }
+
+    // ... [rest of the UIManager class remains the same, including:]
 
     setupLayoutToggle() {
         const verticalBtn = document.getElementById('layout-vertical');
@@ -31,7 +138,7 @@ class UIManager {
 
     switchLayout(layout) {
         this.currentLayout = layout;
-        this.applyLayout(layout, true); // Re-render when switching layouts
+        this.applyLayout(layout, true);
     }
 
     applyLayout(layout, shouldRender = true) {
@@ -60,49 +167,14 @@ class UIManager {
         }
     }
 
-    setupTabNavigation() {
-        const tabButtons = document.querySelectorAll('.tab-button');
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const tabId = button.getAttribute('data-tab');
-                this.switchTab(tabId);
-            });
-        });
-    }
-
-    switchTab(tabId) {
-        // Update tab buttons
-        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-
-        // Activate selected tab
-        document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-        document.getElementById(tabId).classList.add('active');
-
-        this.currentTab = tabId;
-
-        // If switching to memory list, render it
-        if (tabId === 'memory-list-section') {
-            this.renderMemoryList();
-        }
-    }
-
-    setupImportExportButtons() {
-        // Export all memories
-        document.getElementById('export-memories')?.addEventListener('click', () => {
-            this.exportAllMemories();
-        });
-
-        // Import memories
-        document.getElementById('import-memories')?.addEventListener('click', () => {
-            this.showImportModal();
-        });
-    }
-
     handleMapClick(e, mapManager) {
         const locationString = mapManager.setSelectedLocation(e.latlng);
         document.getElementById('memory-location').value = locationString;
+        
+        // Open form if it's not already open
+        if (!this.isFormOpen) {
+            this.toggleMemoryFormOverlay();
+        }
     }
 
     getFormData(mapManager) {
@@ -134,7 +206,7 @@ class UIManager {
         document.getElementById('memory-location').value = '';
 
         // Reset form title and button
-        const formTitle = document.querySelector('.sidebar h2');
+        const formTitle = document.querySelector('#memory-form-sidebar h2');
         const submitButton = document.querySelector('#memory-form button[type="submit"]');
 
         formTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Aggiungi un Ricordo';
@@ -185,7 +257,7 @@ class UIManager {
             <div class="empty-state">
                 <i class="fas fa-heart"></i>
                 <p>Non hai ancora aggiunto ricordi.</p>
-                <p>Vai alla sezione Mappa per iniziare!</p>
+                <p>Clicca sul pulsante "+" per iniziare!</p>
             </div>
         `;
     }
@@ -269,8 +341,9 @@ class UIManager {
             return;
         }
 
-        // Switch to map tab
-        this.switchTab('map-section');
+        // Close memory list and open form
+        this.closeAllOverlays();
+        this.toggleMemoryFormOverlay();
 
         // Populate form with memory data
         this.populateEditForm(memory);
@@ -298,7 +371,7 @@ class UIManager {
         document.getElementById('memory-form').setAttribute('data-editing-id', memory.id);
 
         // Change form title and button
-        const formTitle = document.querySelector('.sidebar h2');
+        const formTitle = document.querySelector('#memory-form-sidebar h2');
         const submitButton = document.querySelector('#memory-form button[type="submit"]');
 
         formTitle.innerHTML = '<i class="fas fa-edit"></i> Modifica Ricordo';
@@ -310,8 +383,8 @@ class UIManager {
             cancelBtn.style.display = 'block';
         }
 
-        // Scroll to form
-        document.querySelector('.sidebar').scrollIntoView({ behavior: 'smooth' });
+        // Scroll to top of form
+        document.getElementById('memory-form-sidebar').scrollTop = 0;
     }
 
     attachMemoryCardEventListeners() {
@@ -345,7 +418,8 @@ class UIManager {
     }
 
     viewMemoryOnMap(memoryId) {
-        this.switchTab('map-section');
+        // Close memory list
+        this.closeAllOverlays();
 
         const memory = this.app.memoryManager.getMemoryById(memoryId);
         if (memory) {

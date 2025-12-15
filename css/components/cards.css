@@ -2,6 +2,7 @@
     padding: 1rem;
     overflow-y: auto;
     background: var(--background);
+    height: 100%;
 }
 
 .section-header {
@@ -13,7 +14,6 @@
     gap: 1rem;
 }
 
-/* Updated layout for controls - all on one line */
 .controls-container {
     display: flex;
     align-items: center;
@@ -26,7 +26,6 @@
 .layout-toggle {
     display: flex;
     gap: 0.5rem;
-
 }
 
 .layout-btn {
@@ -66,7 +65,7 @@
     grid-template-columns: 1fr;
 }
 
-/* Horizontal Layout - UPDATED for new HTML structure */
+/* Horizontal Layout */
 .memories-grid.horizontal-layout .memory-card {
     display: flex;
     height: 120px;
@@ -258,10 +257,6 @@
     font-weight: 500;
 }
 
-.btn-edit {
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%) !important;
-}
-
 /* Update memory actions for better mobile layout */
 .memory-actions {
     display: flex;
@@ -364,7 +359,7 @@
     justify-content: flex-end;
 }
 
-/* MOBILE STYLES - Keep everything on one line */
+/* MOBILE STYLES */
 @media (max-width: 767px) {
     .section-header {
         flex-direction: column;
@@ -373,7 +368,6 @@
 
     .controls-container {
         flex-direction: row;
-        /* Keep as row on mobile */
         gap: 0.5rem;
         flex-wrap: nowrap;
     }
@@ -387,7 +381,6 @@
         flex-wrap: nowrap;
     }
 
-    /* Make buttons smaller on mobile to fit */
     .import-export-buttons .btn-small {
         padding: 0.5rem 0.8rem;
         font-size: 0.8rem;
@@ -477,100 +470,4 @@
     .memories-grid.vertical-layout {
         grid-template-columns: repeat(3, 1fr);
     }
-}
-
-/* SweetAlert2 custom styles - Romantic Theme */
-.custom-swal-popup {
-    border-radius: 20px !important;
-    box-shadow: 0 20px 60px rgba(194, 24, 91, 0.3) !important;
-    background: linear-gradient(135deg, #fff5f8 0%, #ffe6ee 50%, #ffd6e7 100%) !important;
-    border: 2px solid rgba(194, 24, 91, 0.2) !important;
-    backdrop-filter: blur(20px) !important;
-    overflow: hidden !important;
-}
-
-.custom-swal-popup::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
-}
-
-.custom-swal-title {
-    color: var(--primary) !important;
-    font-size: 1.8rem !important;
-    font-weight: 700 !important;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-    margin-bottom: 1rem !important;
-    padding-top: 1rem !important;
-}
-
-.custom-swal-html {
-    color: var(--text) !important;
-    font-size: 1.1rem !important;
-    line-height: 1.6 !important;
-    text-shadow: none !important;
-}
-
-.custom-swal-confirm {
-    border-radius: 12px !important;
-    padding: 14px 32px !important;
-    font-weight: 700 !important;
-    font-size: 1rem !important;
-    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%) !important;
-    border: none !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0 4px 15px rgba(194, 24, 91, 0.4) !important;
-    margin: 0 8px !important;
-}
-
-.custom-swal-confirm:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(194, 24, 91, 0.6) !important;
-}
-
-.custom-swal-cancel {
-    border-radius: 12px !important;
-    padding: 14px 32px !important;
-    font-weight: 600 !important;
-    font-size: 1rem !important;
-    transition: all 0.3s ease !important;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
-    color: var(--text-light) !important;
-    border: 2px solid #dee2e6 !important;
-    margin: 0 8px !important;
-}
-
-.custom-swal-cancel:hover {
-    transform: translateY(-2px) !important;
-    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* SweetAlert2 icon colors */
-.swal2-icon.swal2-warning {
-    border-color: var(--accent) !important;
-    color: var(--accent) !important;
-}
-
-.swal2-icon.swal2-success {
-    border-color: #4CAF50 !important;
-    color: #4CAF50 !important;
-}
-
-.swal2-icon.swal2-error {
-    border-color: var(--secondary) !important;
-    color: var(--secondary) !important;
-}
-
-/* SweetAlert2 success popup specific styles */
-.swal2-success .custom-swal-popup {
-    background: linear-gradient(135deg, #f0fff4 0%, #e6ffed 50%, #dcffe5 100%) !important;
-}
-
-.swal2-success .custom-swal-title {
-    color: #2E7D32 !important;
 }
