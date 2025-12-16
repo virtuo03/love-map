@@ -95,3 +95,112 @@ body {
         height: 100vh;
     }
 }
+
+/* style.css - Aggiungi alla fine o in una sezione apposita */
+
+.profile-btn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    left : auto;
+    z-index: 1001;
+    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+    color: white;
+    border: 3px solid white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s;
+}
+.profile-btn i.fas {
+    transform: translateY(-4px);
+}
+
+.profile-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Stili per la sezione Statistiche */
+#stats-section {
+    background: var(--background);
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.stats-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.stats-header {
+    color: var(--primary);
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+    border-bottom: 3px solid var(--primary-light);
+    padding-bottom: 0.5rem;
+}
+
+.stat-card {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 15px var(--shadow);
+    border-left: 5px solid var(--accent);
+}
+
+.stat-card h4 {
+    color: var(--secondary);
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-card p {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.word-cloud-container {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px var(--shadow);
+    text-align: center;
+}
+
+.word-cloud-container h4 {
+    margin-bottom: 1rem;
+}
+
+#word-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    min-height: 100px;
+}
+
+.word-tag {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.word-tag:hover {
+    transform: translateY(-2px);
+}

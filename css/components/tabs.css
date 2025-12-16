@@ -1,23 +1,19 @@
-/* tabs.css */
-
 .tab-navigation {
     display: flex;
     background: white;
     box-shadow: 0 2px 10px var(--shadow);
     z-index: 10;
-    /* NUOVE REGOLE PER LA NAVIGAZIONE INFERIORE */
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    /* Regola l'ombra per il basso */
     box-shadow: 0 -4px 15px var(--shadow);
-    height: 60px; /* Altezza fissa per la bottom nav */
+    height: 60px; 
 }
 
 .tab-button {
     flex: 1;
-    padding: 0.5rem; /* Riduci il padding */
+    padding: 0.5rem; 
     text-align: center;
     background: white;
     border: none;
@@ -60,8 +56,7 @@
 .tab-content {
     display: none;
     flex: 1;
-    overflow: hidden;
-    /* Aggiungi padding in basso per non coprire la bottom nav */
+    overflow-y: auto;
     padding-bottom: 60px;
 }
 
@@ -77,6 +72,7 @@
     overflow: hidden;
     /* Assicurati che il main content abbia l'altezza piena */
     height: 100%;
+    padding-bottom: 60px;
 }
 
 @media (min-width: 768px) {

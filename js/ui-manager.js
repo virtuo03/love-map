@@ -12,7 +12,9 @@ class UIManager {
         this.setupCancelEditButton();
         this.setupImportExportButtons();
         this.setupLayoutToggle();
-        
+        this.setupStatsButton(); // Ora contiene la logica corretta
+        this.setupListControls();
+
         // Load initial layout preference
         const savedLayout = localStorage.getItem('memoryLayout') || 'vertical';
         this.currentLayout = savedLayout;
@@ -36,7 +38,7 @@ class UIManager {
 
     applyLayout(layout, shouldRender = true) {
         const container = document.getElementById('memories-container');
-        
+
         // Update layout classes
         container.classList.remove('vertical-layout', 'horizontal-layout');
         container.classList.add(layout + '-layout');
@@ -45,15 +47,15 @@ class UIManager {
         document.querySelectorAll('.layout-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        
+
         const activeBtn = document.getElementById(`layout-${layout}`);
         if (activeBtn) {
             activeBtn.classList.add('active');
         }
-        
+
         // Save preference to localStorage
         localStorage.setItem('memoryLayout', layout);
-        
+
         // Re-render the memory list with the new layout if requested
         if (shouldRender) {
             this.renderMemoryList();
@@ -69,35 +71,62 @@ class UIManager {
                 this.switchTab(tabId);
             });
         });
-        
+
         // Assicurati che il tab iniziale sia attivo
         this.switchTab(this.currentTab);
     }
 
+    // CORREZIONE: Apre direttamente il tab Statistiche
+    setupStatsButton() {
+        document.getElementById('profile-stats-btn')?.addEventListener('click', () => {
+            this.switchTab('stats-section');
+        });
+    }
+
+    // Setup Filtro e Ordine
+    setupListControls() {
+        // Search Filter
+        document.getElementById('memory-search')?.addEventListener('input', () => {
+            this.renderMemoryList();
+        });
+
+        // Sort Control
+        document.getElementById('memory-sort')?.addEventListener('change', () => {
+            this.renderMemoryList();
+        });
+    }
+
     switchTab(tabId) {
-        // Update tab buttons
+        // 1. Logica esistente per attivare/disattivare tab e bottoni
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
 
-        // Activate selected tab button
         const selectedButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
         if (selectedButton) {
             selectedButton.classList.add('active');
         }
-        
-        // Activate selected tab content
+
         document.getElementById(tabId).classList.add('active');
 
         this.currentTab = tabId;
 
-        // Se si passa alla lista dei ricordi, fai il render
+        const profileBtn = document.getElementById('profile-stats-btn');
+        if (profileBtn) {
+            // Mostra solo sulla mappa
+            profileBtn.style.display = (tabId === 'map-section') ? 'block' : 'none';
+        }
+
+        // 2. Logica esistente per rendering e resize
         if (tabId === 'memory-list-section') {
             this.renderMemoryList();
         }
-        
-        // Se si passa alla mappa, invalida la dimensione (importante per Leaflet)
+
         if (tabId === 'map-section' && this.app.mapManager.map) {
             this.app.mapManager.map.invalidateSize();
+        }
+
+        if (tabId === 'stats-section') {
+            this.renderStats();
         }
     }
 
@@ -116,8 +145,8 @@ class UIManager {
     handleMapClick(e, mapManager) {
         const locationString = mapManager.setSelectedLocation(e.latlng);
         document.getElementById('memory-location').value = locationString;
-        
-        // Se si seleziona una posizione dalla mappa, sposta l'utente al form (opzionale)
+
+        // Se si seleziona una posizione dalla mappa, sposta l'utente al form 
         if (this.currentTab !== 'add-memory-section') {
             this.switchTab('add-memory-section');
         }
@@ -139,9 +168,9 @@ class UIManager {
             cancelBtn.addEventListener('click', () => {
                 this.resetForm(this.app.mapManager);
                 cancelBtn.style.display = 'none';
-                
+
                 // Torna al tab Mappa dopo l'annullamento dell'editing
-                this.switchTab('map-section'); 
+                this.switchTab('map-section');
             });
         }
     }
@@ -182,18 +211,43 @@ class UIManager {
         setTimeout(() => {
             submitBtn.innerHTML = originalText;
             submitBtn.style.background = 'linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%)';
+
+            // Dopo il salvataggio, torna alla mappa
+            this.switchTab('map-section');
         }, 2000);
     }
 
     renderMemoryList() {
         const container = document.getElementById('memories-container');
-        const memories = this.app.memoryManager.getAllMemories();
+        let memories = this.app.memoryManager.getAllMemories(); // Ottieni i ricordi (già ordinati per data discendente)
+
+        // 1. APPLICA FILTRO TESTUALE
+        const searchTerm = document.getElementById('memory-search')?.value.toLowerCase().trim() || '';
+
+        if (searchTerm) {
+            memories = memories.filter(memory =>
+                memory.title.toLowerCase().includes(searchTerm) ||
+                memory.description.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // 2. APPLICA ORDINAMENTO
+        const sortValue = document.getElementById('memory-sort')?.value || 'date-desc';
+
+        if (sortValue === 'date-asc') {
+            memories.sort((a, b) => new Date(a.date) - new Date(b.date));
+        } else if (sortValue === 'title-asc') {
+            memories.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortValue === 'date-desc') {
+            // Già ordinato di default da getAllMemories, ma lo facciamo per chiarezza
+            memories.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
 
         // Apply current layout without triggering re-render
         this.applyLayout(this.currentLayout, false);
 
         if (memories.length === 0) {
-            container.innerHTML = this.getEmptyStateHTML();
+            container.innerHTML = this.getEmptyStateHTML(searchTerm ? 'Nessun ricordo trovato.' : 'Non hai ancora aggiunto ricordi.');
             return;
         }
 
@@ -201,11 +255,12 @@ class UIManager {
         this.attachMemoryCardEventListeners();
     }
 
-    getEmptyStateHTML() {
+    // Aggiorna la funzione per accettare un messaggio personalizzato
+    getEmptyStateHTML(message = 'Non hai ancora aggiunto ricordi.') {
         return `
             <div class="empty-state">
                 <i class="fas fa-heart"></i>
-                <p>Non hai ancora aggiunto ricordi.</p>
+                <p>${message}</p>
                 <p>Vai alla sezione Mappa per iniziare!</p>
             </div>
         `;
@@ -374,6 +429,107 @@ class UIManager {
         }
     }
 
+    // Render Statistiche
+    renderStats() {
+        const memories = this.app.memoryManager.getAllMemories();
+        const statsContainer = document.getElementById('stats-content');
+
+        // --- Pulsante Info/Aiuto ---
+        const infoButtonHTML = `
+            <button id="show-info-help" class="btn-small btn-export" 
+                    style="margin-bottom: 1.5rem; width: 100%; max-width: 400px; display: block; margin-left: auto; margin-right: auto;">
+                <i class="fas fa-question-circle"></i> Come Funziona l'App? (Info & Aiuto)
+            </button>
+        `;
+        // --- Fine Pulsante ---
+
+        if (memories.length === 0) {
+            statsContainer.innerHTML = infoButtonHTML + this.getEmptyStateHTML('Nessun dato da visualizzare. Aggiungi i primi ricordi!');
+            this.attachStatsEventListeners(); // Collega il listener al pulsante
+            return;
+        }
+
+        // 1. Totale Ricordi
+        const totalMemories = memories.length;
+        const oldestMemory = memories[memories.length - 1];
+        const oldestDate = this.app.memoryManager.formatDate(oldestMemory.date);
+
+        // Distribuzione per Anno
+        const yearDistribution = memories.reduce((acc, memory) => {
+            const year = new Date(memory.date).getFullYear();
+            acc[year] = (acc[year] || 0) + 1;
+            return acc;
+        }, {});
+
+        const yearsHtml = Object.entries(yearDistribution)
+            .sort(([yearA], [yearB]) => yearB - yearA)
+            .map(([year, count]) => `<li><strong>${year}</strong>: ${count} ricordi</li>`).join('');
+
+        // Word Cloud
+        const titles = memories.map(m => m.title.toLowerCase().split(/\s+/)).flat();
+        const descriptions = memories.map(m => m.description.toLowerCase().split(/\s+/)).flat();
+        const allWords = [...titles, ...descriptions];
+
+        const stopWords = new Set(['di', 'a', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra', 'il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'una', 'uno', 'che', 'cosa', 'questo', 'nostro', 'noi', 'mio', 'mia', 'e', 'è', 'del', 'della', 'dei', 'delle', 'al', 'alla', 'agli', 'dalle', 'ci', 'siamo', 'era', 'stato', 'momento', 'ricordo']);
+
+        const wordCounts = allWords.reduce((acc, word) => {
+            const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim();
+            if (cleanWord.length > 3 && !stopWords.has(cleanWord)) {
+                acc[cleanWord] = (acc[cleanWord] || 0) + 1;
+            }
+            return acc;
+        }, {});
+
+        const topWords = Object.entries(wordCounts)
+            .sort(([, countA], [, countB]) => countB - countA)
+            .slice(0, 20);
+
+        const maxCount = topWords.length > 0 ? topWords[0][1] : 1;
+
+        const wordCloudHtml = topWords.map(([word, count]) => {
+            const size = 1 + (count / maxCount) * 1.5;
+            const opacity = 0.6 + (count / maxCount) * 0.4;
+            const hue = 330;
+            const saturation = 70;
+            const lightness = 50 + (count / maxCount) * 20;
+            const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+            return `<span class="word-tag" style="font-size: ${size}em; opacity: ${opacity}; background: ${color};">${word}</span>`;
+        }).join('');
+
+        // Renderizza l'HTML delle Statistiche
+        statsContainer.innerHTML = infoButtonHTML + `
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4><i class="fas fa-heart"></i> Totale Ricordi Salvati</h4>
+                    <p>${totalMemories}</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fas fa-calendar-alt"></i> Ricordo Più Vecchio</h4>
+                    <p>${oldestMemory.title}</p>
+                    <p style="font-size: 1rem; font-weight: 500;">(${oldestDate})</p>
+                </div>
+                <div class="stat-card">
+                    <h4><i class="fas fa-calendar-check"></i> Anni di Ricordi</h4>
+                    <ul style="font-size: 1rem; font-weight: 500;">${yearsHtml}</ul>
+                </div>
+            </div>
+            <div class="word-cloud-container">
+                <h4><i class="fas fa-comments"></i> Nuvola delle Parole Chiave</h4>
+                <div id="word-cloud">${wordCloudHtml}</div>
+            </div>
+        `;
+
+        this.attachStatsEventListeners();
+    }
+
+    // Funzione per collegare il listener delle Statistiche
+    attachStatsEventListeners() {
+        document.getElementById('show-info-help')?.addEventListener('click', () => {
+            this.showInfoModal();
+        });
+    }
+
     // Export all memories
     exportAllMemories() {
         const exportData = this.app.memoryManager.exportMemories();
@@ -504,7 +660,7 @@ class UIManager {
         const importData = textarea.value.trim();
 
         if (!importData) {
-            alert('Per favore, inserisci un codice valido.');
+            alert('Per favor, inserisci un codice valido.');
             return;
         }
 
@@ -541,6 +697,59 @@ class UIManager {
             });
         }
     }
+
+    // Modale Info & Aiuto
+    showInfoModal() {
+        const modalHtml = `
+            <div class="import-modal" id="info-modal">
+                <div class="import-modal-content">
+                    <h3><i class="fas fa-info-circle"></i> Info & Aiuto</h3>
+                    
+                    <div class="stat-card">
+                        <h4><i class="fas fa-map-marker-alt"></i> Selezionare Posizione</h4>
+                        <p style="font-size: 1rem; font-weight: 500; color: var(--text-light);">Vai al tab 'Mappa' e <strong>clicca sul punto desiderato</strong> per selezionare la posizione del ricordo. La posizione verrà salvata automaticamente nel form.</p>
+                    </div>
+
+                    <div class="stat-card">
+                        <h4><i class="fas fa-share-alt"></i> Backup & Condivisione</h4>
+                        <p style="font-size: 1rem; font-weight: 500; color: var(--text-light);">Usa 'Esporta' nella sezione 'Ricordi' per creare un codice JSON contenente tutte le tue memorie, utile per backup e condivisione.</p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h4><i class="fas fa-download"></i> Installazione PWA</h4>
+                        <p style="font-size: 1rem; font-weight: 500; color: var(--text-light);">Puoi installare la 'Mappa dei Ricordi' direttamente sul tuo telefono come un'app nativa se vedi il pulsante di installazione.</p>
+                    </div>
+
+                    <div class="import-actions">
+                        <button id="close-info" class="btn-small">
+                            <i class="fas fa-times"></i> Chiudi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('info-modal')?.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('info-modal');
+        modal.style.display = 'block';
+
+        // Listener per chiudere modale e tornare al tab Statistiche
+        document.getElementById('close-info').addEventListener('click', () => {
+            modal.remove();
+            this.switchTab('stats-section');
+        });
+
+        // Chiudi su background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                this.switchTab('stats-section');
+            }
+        });
+    }
+
 
     async deleteMemory(memoryId) {
         const memory = this.app.memoryManager.getMemoryById(memoryId);

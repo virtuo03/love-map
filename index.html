@@ -25,11 +25,16 @@
 </head>
 
 <body>
+    <button id="profile-stats-btn" class="profile-btn" title="Statistiche & Info">
+        <i class="fas fa-user-circle"></i>
+    </button>
+
     <div class="app-container">
         <div class="main-content">
+
             <div id="map-section" class="tab-content active">
                 <div id="map"></div>
-                </div>
+            </div>
 
             <div id="add-memory-section" class="tab-content">
                 <div class="sidebar form-only">
@@ -71,9 +76,20 @@
                 </div>
             </div>
 
+            <div id="stats-section" class="tab-content">
+                <div class="stats-container">
+                    <h2 class="stats-header"><i class="fas fa-chart-line"></i> I Nostri Ricordi in Numeri</h2>
+                    <div id="stats-content">
+                    </div>
+                </div>
+            </div>
+
             <div id="memory-list-section" class="tab-content">
                 <div class="section-header">
                     <div class="controls-container">
+                        <input type="text" id="memory-search" class="memory-search-input"
+                            placeholder="Cerca Ricordo...">
+
                         <div class="layout-toggle">
                             <button id="layout-vertical" class="layout-btn btn-small active" title="Layout Verticale">
                                 <i class="fas fa-th-large"></i>
@@ -82,6 +98,17 @@
                                 <i class="fas fa-bars"></i>
                             </button>
                         </div>
+                    </div>
+                    <div class="secondary-controls-container">
+                        <div class="sort-control">
+                            <label for="memory-sort"><i class="fas fa-sort-amount-down"></i> Ordina:</label>
+                            <select id="memory-sort">
+                                <option value="date-desc">Data (Recente)</option>
+                                <option value="date-asc">Data (Meno Recente)</option>
+                                <option value="title-asc">Titolo (A-Z)</option>
+                            </select>
+                        </div>
+
                         <div class="import-export-buttons">
                             <button id="export-memories" class="btn-small btn-export">
                                 <i class="fas fa-share-alt"></i> Esporta
@@ -91,9 +118,10 @@
                             </button>
                         </div>
                     </div>
+
                 </div>
                 <div class="memories-grid vertical-layout" id="memories-container">
-                    </div>
+                </div>
             </div>
         </div>
 
